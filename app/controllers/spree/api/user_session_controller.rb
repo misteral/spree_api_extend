@@ -21,7 +21,7 @@ module Spree
         if user && user.valid_password?(params[:session][:password])
           # Cookie sessions are our friend... for now.
           # sign_in(user, :event => :authentication, :bypass => true)
-          @order = current_order(true)
+          #@order = current_order(true)
           @user = user
           return respond_with(@user, :status => 200, :default_template => :show)
         else
