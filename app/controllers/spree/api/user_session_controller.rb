@@ -3,7 +3,7 @@ module Spree
     class UserSessionController < Spree::Api::BaseController
       include Spree::Core::ControllerHelpers::Auth
       include Spree::Core::ControllerHelpers::Order
-      
+
       # expects json:
       # { session: {
       #      "email": "",
@@ -17,8 +17,9 @@ module Spree
         #   @user = user
         #   return respond_with(@user, :status => 200, :default_template => :show)
         # end
+        #binding.pry
         user = Spree::User.find_for_database_authentication(:login => params[:session][:login])
-        if user && user.valid_password?(params[:session][:password])
+        if user && user.valid_password?(params[:session][:password])&& !user.seller.suspend?
           # Cookie sessions are our friend... for now.
           # sign_in(user, :event => :authentication, :bypass => true)
           #@order = current_order(true)
@@ -31,7 +32,8 @@ module Spree
 
       def show
         # lookup user by token or session
-        if user
+        #binding.pry
+        if user && !user.seller.suspend?
           @order = current_order
           @user = user
           respond_with(@user, :status => 200, :default_template => :show)
