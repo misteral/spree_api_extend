@@ -4,13 +4,26 @@ module Spree
       include Spree::Core::ControllerHelpers::Auth
       include Spree::Core::ControllerHelpers::Order
 
-      # expects json:
-      # { session: {
-      #      "email": "",
-      #      "password": ""
-      #   }
-      # }
-      # TODO. create/load session ?
+      def check_for_user_or_api_key
+        # User is already authenticated with Spree, make request this way instead.
+        # return true if @current_api_user = try_spree_current_user || !Spree::Api::Config[:requires_authentication]
+
+        # if api_key.blank? && order_token.blank?
+        #   render "spree/api/errors/must_specify_api_key", :status => 401 and return
+        # end
+      end
+      def authenticate_user
+        unless @current_api_user
+        #binding.pry
+          if params[:session][:login].blank? && (requires_authentication? || api_key.present?)
+            render "spree/api/errors/unauthorized", :status => 401 and return
+          else
+            # An anonymous user
+            @current_api_user = Spree::User.find_for_database_authentication(:login => params[:session][:login])
+          end
+        end
+      end
+
       def create
         # if user.present?
         #   @order = current_order
@@ -18,11 +31,8 @@ module Spree
         #   return respond_with(@user, :status => 200, :default_template => :show)
         # end
         #binding.pry
-        user = Spree::User.find_for_database_authentication(:login => params[:session][:login])
+        #user = Spree::User.find_for_database_authentication(:login => params[:session][:login])
         if user && user.valid_password?(params[:session][:password])&& !user.seller.suspend?
-          # Cookie sessions are our friend... for now.
-          # sign_in(user, :event => :authentication, :bypass => true)
-          #@order = current_order(true)
           @user = user
           return respond_with(@user, :status => 200, :default_template => :show)
         else
